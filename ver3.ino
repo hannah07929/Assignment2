@@ -1,8 +1,8 @@
 /*
-Note:
-1. high level description (e.g. at top) describing overall behaviour of the code.
-2. add task 3
-3. chnage task 9 to contain task 3
+  Note:
+  1. high level description (e.g. at top) describing overall behaviour of the code.
+  2. add task 3
+  3. chnage task 9 to contain task 3
 */
 
 /*
@@ -34,6 +34,15 @@ bool error_code;
 
 byte LED_GPIO = 16;
 
+//task3 variables
+byte square_GPIO = 34;
+bool pulse;
+float period;
+float frequency;
+unsigned long startTime;
+unsigned long endTime;
+unsigned long beginwave;
+
 
 //Task FUNCTIONS
 
@@ -47,6 +56,38 @@ void Task1() {
 //Task2 - Monitor switch state
 void Task2() {
   state = digitalRead(SW1_GPIO);
+}
+
+//Task3 - square wave
+void Task3() {
+  pulse = digitalRead(square_GPIO); //read pin
+  beginwave = micros();
+  if (pulse == 1)
+    while (pulse == 1) {
+      startTime = micros() - beginwave;
+      pulse = digitalRead(square_GPIO);
+    }
+
+  while (pulse == 0) {
+    endTime = micros() - beginwave;
+    pulse = digitalRead(square_GPIO);
+  }
+
+  if (pulse == 0)
+    while (pulse == 0) {
+      startTime = micros() - beginwave;
+      pulse = digitalRead(square_GPIO);
+    }
+
+  while (pulse == 1) {
+    endTime = micros() - beginwave;
+    pulse = digitalRead(square_GPIO);
+  }
+
+  period = (endTime - startTime) * 0.000001;
+  //Serial.println(period);
+
+  frequency = 1 / period;
 }
 
 //Task4 - Read analogue input using pot
@@ -93,13 +134,14 @@ void Task8() {
 
 //Task9 - Log information to the serial port in CSV
 void Task9() {
-  Serial.print(state); Serial.print(","); Serial.print(error_code); Serial.print(","); Serial.println(filter_analg_val); //remeber to change this accourding to task 3
+  //Serial.print(state); Serial.print(","); Serial.print(frequency); Serial.print(","); Serial.println(filter_analg_val); //remeber to change this accourding to task 3
 }
 
 void setup() {
   Serial.begin(9600);
   pinMode(dog_GPIO, OUTPUT);
   pinMode(SW1_GPIO, INPUT);
+  pinMode(square_GPIO, INPUT);
   pinMode(POT_GPIO, INPUT);
   pinMode(LED_GPIO, OUTPUT);
 }
@@ -109,15 +151,16 @@ void loop() {
 
   if (ticks % 2 == 0) { // if 2 clock cycles have been completed
     Task1(); //call Task1
+    
+    
   }
 
   if (ticks % 10 == 0) {
     Task2(); //call Task2
   }
-  if (ticks % 50 == 0) {
-    //replace these two instructions with the function
-    delay(10);
-    Serial.println("Task3");
+  if (ticks % 50 == 1) {//shift task3 forward by 1 clock cycle
+    Task3(); //call task3
+    Serial.print("task1");Serial.print(millis());Serial.println(ticks);
   }
 
   if (ticks % 2 == 0) {
