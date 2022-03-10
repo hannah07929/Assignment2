@@ -1,103 +1,146 @@
 /*
-
+Note:
+1. high level description (e.g. at top) describing overall behaviour of the code.
+2. add task 3
+3. chnage task 9 to contain task 3
 */
-unsigned long Si; //start time
-unsigned long Fi; //finish time
-unsigned long Ci; //duration
 
-//task 2 variables
+/*
+  Task 1 every 40ms
+  Task 2 every 200ms
+  Task 3 every 1000ms
+  Task 4 every 40ms
+  Task 5 every 40ms
+  Task 6 every 100ms
+  Task 7 every 320ms
+  Task 8 every 320ms
+  Task 9 every 5000ms
+*/
+
+unsigned int ticks = 0;
+
+byte dog_GPIO = 15; //pin 15 is outputting watchdog waveform
+
 byte SW1_GPIO = 22; //switch connected to pin 22
 bool state;         //state of the switch
 
-//task 4 variables
 byte POT_GPIO = 33;
 unsigned short int analg_val;
 
-//task 5 variables
 unsigned short int new_analg_val ;
 unsigned short int filter_analg_val;
 
-//task 7 variables
 bool error_code;
 
-//task 8 variables
 byte LED_GPIO = 16;
 
-void setup() {
-  Serial.begin(9600);
-  pinMode(SW1_GPIO, INPUT);  // Switch is an input
-  pinMode(POT_GPIO, INPUT);  // Switch is an input
-  pinMode(LED_GPIO, OUTPUT);  // Switch is an input
+
+//Task FUNCTIONS
+
+//Task1 - Output digital watchdog waveform
+void Task1() {
+  digitalWrite(dog_GPIO, HIGH);
+  delayMicroseconds(50);
+  digitalWrite(dog_GPIO, LOW);
 }
 
-void loop() {
-
-  //task2:
+//Task2 - Monitor switch state
+void Task2() {
   state = digitalRead(SW1_GPIO);
+}
 
-  //task5:
-  new_analg_val = 0 ;
+//Task4 - Read analogue input using pot
+void Task4() {
+  analg_val = analogRead(POT_GPIO);
+}
+
+//Task5 - Compute filtered analogue value
+void Task5() {
+  new_analg_val = 0;
   for (int i = 0; i <= 3; i++) {
-    analg_val = analogRead(POT_GPIO);     //task4:
-    //Serial.println(analg_val );
+    Task4();
     new_analg_val = new_analg_val + analg_val;
   }
   filter_analg_val = new_analg_val / 4;
+}
 
-  //task6:
+//Task6 - Execute instruction 1000 times
+void Task6() {
   for (int i = 0; i <= 999; i++) { //repeat 1000 times
     __asm__ __volatile__ ("nop");
   }
+}
 
-  //task7:
+//Task7 - Perform error check
+void Task7() {
   if (filter_analg_val > (0.5 * 4095)) {
     error_code = 1;
   }
   else {
     error_code = 0;
   }
-  //Serial.println(error_code);
+}
 
-  //task8:
-  digitalWrite(LED_GPIO, LOW);
+//Task8 - Visualise error_code using an LED
+void Task8() {
   if (error_code == 1) {
     digitalWrite(LED_GPIO, HIGH);
   }
+  else {
+    digitalWrite(LED_GPIO, LOW);
+  }
+}
 
-  //Task9:
-  Serial.print(state); Serial.print(","); Serial.print(error_code); Serial.print(","); Serial.println(filter_analg_val);
+//Task9 - Log information to the serial port in CSV
+void Task9() {
+  Serial.print(state); Serial.print(","); Serial.print(error_code); Serial.print(","); Serial.println(filter_analg_val); //remeber to change this accourding to task 3
+}
 
+void setup() {
+  Serial.begin(9600);
+  pinMode(dog_GPIO, OUTPUT);
+  pinMode(SW1_GPIO, INPUT);
+  pinMode(POT_GPIO, INPUT);
+  pinMode(LED_GPIO, OUTPUT);
+}
 
+void loop() {
+  delay(20); ticks++;  //duration of 1 clock cycle is 20ms
 
+  if (ticks % 2 == 0) { // if 2 clock cycles have been completed
+    Task1(); //call Task1
+  }
 
-  
-/* start measuring time 
-  Si = micros(); //start timer
-    for (int i = 0; i <= 999; i++) //repeat 1000 times
-    {
-      //start task here
-  
-  
-      //endtask here
-    }
-  Fi = micros(); //end timer
-  Ci = (Fi - Si); //calculate duration
-  Serial.println(Ci); //display duration
-end measuring time*/
+  if (ticks % 10 == 0) {
+    Task2(); //call Task2
+  }
+  if (ticks % 50 == 0) {
+    //replace these two instructions with the function
+    delay(10);
+    Serial.println("Task3");
+  }
 
+  if (ticks % 2 == 0) {
+    Task4(); //call Task4
+  }
 
+  if (ticks % 2 == 0) {
+    Task5(); //call Task5
+  }
 
+  if (ticks % 5 == 0) {
+    Task6(); //call Task6
+  }
+  if (ticks % 16 == 0) {
+    Task7(); //call Task7
+  }
 
+  if (ticks % 16 == 0) {
+    Task8(); //call Task8
+  }
+
+  if (ticks % 250 == 0) {
+    Task9(); //call Task9
+  }
 
 }
-/*
-   Task1 = 50000
-   Task2 = 221
-   Task3 = ?
-   Task4 = 59999
-   Task5 = 239966
-   Task6 = 25205
-   Task7 = 381
-   Task8 = 263
-   Task9 = 7024
-*/
